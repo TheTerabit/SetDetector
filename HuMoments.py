@@ -5,8 +5,24 @@ import numpy as np
 from skimage.measure import find_contours
 from skimage.morphology import erosion, dilation
 
+###Image helper functions
+def cutOut(image):
+    start = 0
+    end = len(image) - 1
+    begin = True
+    center = image[len(image) // 2]
+    for i in range(len(center)):
+        if center[i] > 0 and begin:
+            start = i - 20
+            begin = False
+        if center[i] == 0 and not begin:
+            end = i + 20
+            break
+
+    return image[5:-5, start:end]
 
 ####Image attributes finding
+
 def pickNumber(image):
     center = image[len(image) // 2]
     n = 0
@@ -15,11 +31,50 @@ def pickNumber(image):
             n+=1
     return n
 
-def pickColor(image):
-    return ('red', 'green', 'violet')
+def pickColor(image, thresh):
+    color = []
+    for i in range(len(thresh)):
+        for j in range(len(thresh[i])):
+            if thresh[i][j] > 0:
+                color.append(image[i][j])
+                #print(image[i][j])
+    r = 0
+    g = 0
+    b = 0
+    rm = []
+    gm = []
+    bm = []
+    for i in color:
+        #r += i[0]
+        #g += i[1]
+        #b += i[2]
+        rm.append(i[2])
+        gm.append(i[1])
+        bm.append(i[0])
+    #print(rm)
+    rm.sort()
+    gm.sort()
+    bm.sort()
+    #print(rm)
+    rm = rm[len(rm) // 2]
+    gm = gm[len(gm) // 2]
+    bm = bm[len(bm) // 2]
+    #r /= len(color)
+    #g /= len(color)
+    #b /= len(color)
+
+    if bm > rm and bm > gm:
+        return 'violet'
+    elif rm > bm and rm > gm:
+        return 'red'
+    else:
+        return 'green'
+
+    return (r, g, b, rm, gm, bm)
+    #return ('red', 'green', 'violet')
 
 def pickFilling(image, imageFilled):
-    print(image)
+    #print(image)
     before = 0
     after = 0
     for i in range(len(image)):
@@ -124,35 +179,33 @@ def prepareImage(image):
     #print(im[len(im)//2])
     return im
 
+def readCard(imageName):
+    image = cv2.imread(imageName)
 
-image = cv2.imread("k3.png")
+    im = color.rgb2grey(image)
+    thresh = prepareImage(image)
+    imageFilled = fillIn(thresh)
+    cutImage = cutOut(imageFilled)
+    print(pickNumber(imageFilled))
+    print(pickColor(image, thresh))
+    print(pickFilling(thresh, imageFilled))
+    #thresh = thresh[5:-5, :-185]#diamond
+    print(pickShape(cutImage))
+    #imageFilled = imageFilled[5:-5, 50:]#oval
+    #thresh = thresh[5:-5, 50:-250]#wave
+    #--
+    #cnts = find_contours(thresh, 0.7)
+    #cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    #cnts = imutils.grab_contours(cnts)
+    # loop over the contours
+    #for c in cnts:
+    # compute the center of the contour, then detect the name of the
+    # shape using only the contour
+    # Calculate Hu Moments
+    # show the output image
+    cv2.imshow("Image", cutImage)
+    cv2.waitKey(0)
 
-im = color.rgb2grey(image)
-thresh = prepareImage(image)
-imageFilled = fillIn(thresh)
-print(pickNumber(imageFilled))
-print(pickColor(thresh))
-print(pickFilling(thresh, imageFilled))
-#thresh = thresh[5:-5, :-185]#diamond
-imageFilled = imageFilled[5:-5, 50:]#oval
-#thresh = thresh[5:-5, 50:-250]#wave
-#--
-#cnts = find_contours(thresh, 0.7)
-#cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#cnts = imutils.grab_contours(cnts)
-# loop over the contours
-#for c in cnts:
-
-# compute the center of the contour, then detect the name of the
-# shape using only the contour
-
-
-# Calculate Hu Moments
-
-
-print(pickShape(imageFilled))
-
-# show the output image
-cv2.imshow("Image", imageFilled)
-
-cv2.waitKey(0)
+cards = ["k1.png","k2.png","k3.png","k4.png",]
+for i in cards:
+    readCard(i)
