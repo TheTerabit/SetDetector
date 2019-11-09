@@ -179,18 +179,20 @@ def prepareImage(image):
     #print(im[len(im)//2])
     return im
 
+
+####main
 def readCard(imageName):
     image = cv2.imread(imageName)
 
-    im = color.rgb2grey(image)
+    #im = color.rgb2grey(image)
     thresh = prepareImage(image)
     imageFilled = fillIn(thresh)
     cutImage = cutOut(imageFilled)
-    print(pickNumber(imageFilled))
-    print(pickColor(image, thresh))
-    print(pickFilling(thresh, imageFilled))
+    number = pickNumber(imageFilled)
+    color = pickColor(image, thresh)
+    filling = pickFilling(thresh, imageFilled)
     #thresh = thresh[5:-5, :-185]#diamond
-    print(pickShape(cutImage))
+    shape = pickShape(cutImage)
     #imageFilled = imageFilled[5:-5, 50:]#oval
     #thresh = thresh[5:-5, 50:-250]#wave
     #--
@@ -203,9 +205,20 @@ def readCard(imageName):
     # shape using only the contour
     # Calculate Hu Moments
     # show the output image
-    cv2.imshow("Image", cutImage)
+    print((shape, color, filling, number))
+    cv2.imshow("Image", image)
     cv2.waitKey(0)
 
-cards = ["k1.png","k2.png","k3.png","k4.png",]
-for i in cards:
-    readCard(i)
+    return (shape, color , filling, number)
+
+c = ["k1.png","k2.png","k3.png","k4.png","k5.png","k6.png","k7.png","k8.png","k9.png","k10.png","k11.png","k12.png",]
+assert readCard(c[0]) == ('wave', 'violet', 'full', 1), "erorr"
+assert readCard(c[1]) == ('wave', 'green', 'striped', 3), "erorr"
+assert readCard(c[2]) == ('diamond', 'violet', 'empty', 2), "erorr"
+assert readCard(c[3]) == ('oval', 'red', 'full', 1), "erorr"
+assert readCard(c[4]) == ('wave', 'red', 'striped', 2), "erorr"
+assert readCard(c[5]) == ('diamond', 'red', 'full', 1), "erorr"
+assert readCard(c[10]) == ('oval', 'green', 'empty', 2), "erorr"
+
+#for i in c:
+#    readCard(i)
