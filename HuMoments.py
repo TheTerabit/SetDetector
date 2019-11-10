@@ -25,12 +25,31 @@ def cutOut(image):
 ####Image attributes finding
 
 def pickNumber(image):
-    center = image[len(image) // 2]
-    n = 0
-    for i in range(1,len(center)-1):
-        if center[i] > 0 and center[i+1] == 0:
-            n+=1
-    return n
+    ones = 0
+    twos = 0
+    threes = 0
+    for line in range(0,len(image),10):
+
+        #center = image[len(image) // 2]
+        n = 0
+        for i in range(1,len(image[line])-1):
+            if image[line][i] > 0 and image[line][i+1] == 0:
+                n+=1
+        if n == 1:
+            ones += 1
+        elif n == 2:
+            twos += 1
+        elif n == 3:
+            threes += 1
+
+
+    if ones > twos and ones > threes:
+        return 1
+    elif twos > ones and twos > threes:
+        return 2
+    else:
+        return 3
+    #return n
 
 def pickColor(image, thresh):
     color = []
@@ -89,7 +108,7 @@ def pickFilling(image, imageFilled):
     print(filled)
     if filled > 0.9:
         return 'full'
-    elif filled > 0.4:
+    elif filled > 0.3:
         return 'striped'
     else:
         return 'empty'
@@ -128,7 +147,7 @@ def pickShape(thresh):#picking the specyfic shape - only your shape as input
         d = d + abs(huMoments[i][0] - diamond[i])
         w = w + abs(huMoments[i][0] - wave[i])
         o = o + abs(huMoments[i][0] - oval[i])
-    print((d,w,o))
+    #print((d,w,o))
     if d < w and d < o:
         return 'diamond'
     elif w < d and w < o:
@@ -175,11 +194,12 @@ def checkPixels(image):
         return True
 def prepareImage(image):
     im = color.rgb2grey(image)
-    #im = contrast(im, 1)
-    im = resizeimage.resize_cover(im, [len(im[0])*2, len(im)*2], validate=False)
-    im = gamma(im, 1.5)
-    #im = cv2.blur(im, (10, 10))
-    im = tresh(0.5, im)
+    #im = cv2.blur(im, (5, 5))
+    im = contrast(im, 1)
+    #im = resizeimage.resize_cover(im, [len(im[0])*2, len(im)*2], validate=False)
+    im = gamma(im, 0.25)
+
+    im = tresh(0.7, im)
     #t =0.5
     #i = im
     #while(checkPixels(i)):
@@ -252,18 +272,20 @@ def readCard(imageName):
     # show the output image
     print((shape, color, filling, number))
     #cv2.imshow("Image", image)
-    cv2.imshow("Image", imageFilled)
+    cv2.imshow("Image", thresh)
     cv2.waitKey(0)
 
     return (shape, color , filling, number)
 
+
+#color ok
 #assert readCard("k13.jpg") == ('oval', 'violet', 'striped', 3), "erorr"
-#assert readCard("k14.jpg") == ('wave', 'violet', 'empty', 1), "erorr" #ok
-assert readCard("k15.jpg") == ('oval', 'red', 'striped', 1), "erorr" #diamond -> oval
-#assert readCard("k16.jpg") == ('diamond', 'green', 'empty', 1), "erorr" #ok
+#assert readCard("k14.jpg") == ('wave', 'violet', 'empty', 1), "erorr"
+#assert readCard("k15.jpg") == ('oval', 'red', 'striped', 1), "erorr"
+#assert readCard("k16.jpg") == ('diamond', 'green', 'empty', 1), "erorr" # dziwne rzeczy w rogu - daje striped :(
 #assert readCard("k17.jpg") == ('oval', 'violet', 'full', 1), "erorr" # diamond -> oval
 #assert readCard("k18.jpg") == ('diamond', 'red', 'empty', 1), "erorr" # wave -> diamond
-#assert readCard("k19.jpg") == ('diamond', 'green', 'full', 3), "erorr" #trudne oval -> diamond, 10 -> 3
+#assert readCard("k19.jpg") == ('diamond', 'green', 'full', 3), "erorr" #trudne oval -> diamond
 #assert readCard("k20.jpg") == ('wave', 'red', 'empty', 2), "erorr" #ok
 #assert readCard("k21.jpg") == ('wave', 'green', 'striped', 2), "erorr" # empty -> striped
 #assert readCard("k22.jpg") == ('wave', 'violet', 'empty', 3), "erorr"#ok
@@ -271,12 +293,12 @@ assert readCard("k15.jpg") == ('oval', 'red', 'striped', 1), "erorr" #diamond ->
 #assert readCard("k24.jpg") == ('wave', 'red', 'striped', 1), "erorr"# empty -> striped
 
 c = ["k1.png","k2.png","k3.png","k4.png","k5.png","k6.png","k7.png","k8.png","k9.png","k10.png","k11.png","k12.png",]
-assert readCard(c[10]) == ('oval', 'green', 'empty', 2), "erorr"
-assert readCard(c[0]) == ('wave', 'violet', 'full', 1), "erorr" #ok
-assert readCard(c[1]) == ('wave', 'green', 'striped', 3), "erorr" #ok
-assert readCard(c[2]) == ('diamond', 'violet', 'empty', 2), "erorr" #ok
-assert readCard(c[3]) == ('oval', 'red', 'full', 1), "erorr" #ok
-assert readCard(c[4]) == ('wave', 'red', 'striped', 2), "erorr" #ok
+#assert readCard(c[10]) == ('oval', 'green', 'empty', 2), "erorr" #ok
+#assert readCard(c[0]) == ('wave', 'violet', 'full', 1), "erorr" #ok
+#assert readCard(c[1]) == ('wave', 'green', 'striped', 3), "erorr" #ok
+#assert readCard(c[2]) == ('diamond', 'violet', 'empty', 2), "erorr" #ok
+#assert readCard(c[3]) == ('oval', 'red', 'full', 1), "erorr" #ok
+#assert readCard(c[4]) == ('wave', 'red', 'striped', 2), "erorr" #ok
 assert readCard(c[5]) == ('diamond', 'red', 'full', 1), "erorr" #ok
 
 
