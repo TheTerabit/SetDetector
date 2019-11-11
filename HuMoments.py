@@ -5,7 +5,7 @@ from skimage import color
 import numpy as np
 from skimage.measure import find_contours
 from skimage.morphology import erosion, dilation
-
+import cvMatchingTemplate
 ###Image helper functions
 def cutOut(image):
     start = 0
@@ -115,6 +115,7 @@ def pickFilling(image, imageFilled):
     #return ('full', 'empty', 'striped')
 
 def pickShape(thresh):#picking the specyfic shape - only your shape as input
+    return cvMatchingTemplate.getShape(thresh)
     moments = cv2.moments(thresh)
     huMoments = cv2.HuMoments(moments)
     print(huMoments)
@@ -139,6 +140,30 @@ def pickShape(thresh):#picking the specyfic shape - only your shape as input
      [6.77168851e-29],
      [1.26244655e-18],
      [9.14466650e-29]]
+
+    #new
+    oval = [[7.94495186e-04],
+ [2.33924915e-07],
+ [6.50305278e-15],
+ [8.32710534e-16],
+ [1.93770677e-30],
+ [4.02745190e-19],
+ [1.42051806e-32]]
+    wave = [[1.02069943e-03],
+ [5.89854653e-07],
+ [2.80656234e-12],
+ [7.48937241e-13],
+ [9.50856577e-25],
+ [3.97394426e-16],
+ [5.24274817e-25]]
+
+    diamond = [[ 8.36794178e-04],
+ [ 2.73268628e-07],
+ [ 2.81484989e-13],
+ [ 1.01121430e-13],
+ [ 1.70602362e-26],
+ [ 5.28385646e-17],
+ [-9.94829941e-29]]
 
     d = 0
     w = 0
@@ -197,9 +222,9 @@ def prepareImage(image):
     #im = cv2.blur(im, (5, 5))
     im = contrast(im, 1)
     #im = resizeimage.resize_cover(im, [len(im[0])*2, len(im)*2], validate=False)
-    im = gamma(im, 0.25)
+    im = gamma(im, 1.5)
 
-    im = tresh(0.7, im)
+    im = tresh(0.5, im)
     #t =0.5
     #i = im
     #while(checkPixels(i)):
@@ -273,32 +298,34 @@ def readCard(imageName):
     print((shape, color, filling, number))
     #cv2.imshow("Image", image)
     cv2.imshow("Image", thresh)
+    cv2.imwrite("3ovals.jpg", imageFilled)
     cv2.waitKey(0)
 
     return (shape, color , filling, number)
 
-
-#color ok
+#readCard("wave.jpg")
+#readCard("diamond.jpg")
+#color ok, number ok
 #assert readCard("k13.jpg") == ('oval', 'violet', 'striped', 3), "erorr"
-#assert readCard("k14.jpg") == ('wave', 'violet', 'empty', 1), "erorr"
-#assert readCard("k15.jpg") == ('oval', 'red', 'striped', 1), "erorr"
-#assert readCard("k16.jpg") == ('diamond', 'green', 'empty', 1), "erorr" # dziwne rzeczy w rogu - daje striped :(
-#assert readCard("k17.jpg") == ('oval', 'violet', 'full', 1), "erorr" # diamond -> oval
-#assert readCard("k18.jpg") == ('diamond', 'red', 'empty', 1), "erorr" # wave -> diamond
-#assert readCard("k19.jpg") == ('diamond', 'green', 'full', 3), "erorr" #trudne oval -> diamond
-#assert readCard("k20.jpg") == ('wave', 'red', 'empty', 2), "erorr" #ok
-#assert readCard("k21.jpg") == ('wave', 'green', 'striped', 2), "erorr" # empty -> striped
-#assert readCard("k22.jpg") == ('wave', 'violet', 'empty', 3), "erorr"#ok
-#assert readCard("k23.jpg") == ('diamond', 'red', 'empty', 3), "erorr" #ok
-#assert readCard("k24.jpg") == ('wave', 'red', 'striped', 1), "erorr"# empty -> striped
+assert readCard("k14.jpg") == ('wave', 'violet', 'empty', 1), "erorr"
+assert readCard("k15.jpg") == ('oval', 'red', 'striped', 1), "erorr" #plaskie, diamond -> oval
+#assert readCard("k16.jpg") == ('diamond', 'green', 'empty', 1), "erorr" # dziwne rzeczy w rogu - daje striped :( # najnowszy zle
+assert readCard("k17.jpg") == ('oval', 'violet', 'full', 1), "erorr" #plaskie, diamond -> oval ok na nowych
+assert readCard("k18.jpg") == ('diamond', 'red', 'empty', 1), "erorr" #plaskie,  wave -> diamond
+#assert readCard("k19.jpg") == ('diamond', 'green', 'full', 3), "erorr" #trudne oval -> diamond nie daje rady nowy
+assert readCard("k20.jpg") == ('wave', 'red', 'empty', 2), "erorr" #ok
+assert readCard("k21.jpg") == ('wave', 'green', 'striped', 2), "erorr" #
+assert readCard("k22.jpg") == ('wave', 'violet', 'empty', 3), "erorr"#ok #
+assert readCard("k23.jpg") == ('diamond', 'red', 'empty', 3), "erorr" #ok
+assert readCard("k24.jpg") == ('wave', 'red', 'striped', 1), "erorr"#
 
 c = ["k1.png","k2.png","k3.png","k4.png","k5.png","k6.png","k7.png","k8.png","k9.png","k10.png","k11.png","k12.png",]
-#assert readCard(c[10]) == ('oval', 'green', 'empty', 2), "erorr" #ok
-#assert readCard(c[0]) == ('wave', 'violet', 'full', 1), "erorr" #ok
-#assert readCard(c[1]) == ('wave', 'green', 'striped', 3), "erorr" #ok
-#assert readCard(c[2]) == ('diamond', 'violet', 'empty', 2), "erorr" #ok
-#assert readCard(c[3]) == ('oval', 'red', 'full', 1), "erorr" #ok
-#assert readCard(c[4]) == ('wave', 'red', 'striped', 2), "erorr" #ok
+assert readCard(c[10]) == ('oval', 'green', 'empty', 2), "erorr" #ok
+assert readCard(c[0]) == ('wave', 'violet', 'full', 1), "erorr" #ok
+assert readCard(c[1]) == ('wave', 'green', 'striped', 3), "erorr" #ok
+assert readCard(c[2]) == ('diamond', 'violet', 'empty', 2), "erorr" #ok
+assert readCard(c[3]) == ('oval', 'red', 'full', 1), "erorr" #ok
+assert readCard(c[4]) == ('wave', 'red', 'striped', 2), "erorr" #ok
 assert readCard(c[5]) == ('diamond', 'red', 'full', 1), "erorr" #ok
 
 
