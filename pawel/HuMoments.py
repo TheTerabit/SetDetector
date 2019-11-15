@@ -1,12 +1,13 @@
 import cv2
-import imutils
-from resizeimage import resizeimage
-from skimage import color
 import numpy as np
-from skimage.measure import find_contours
+from skimage import color
 from skimage.morphology import erosion, dilation
-import cvMatchingTemplate
+
+from pawel import cvMatchingTemplate
+
 ###Image helper functions
+claheObj = cv2.createCLAHE(clipLimit = 10.0, tileGridSize = (40,40))
+
 def cutOut(image):
     start = 0
     end = len(image) - 1
@@ -21,6 +22,20 @@ def cutOut(image):
             break
 
     return image[5:-5, start:end]
+def cutOutOriginal(image, original):
+    start = 0
+    end = len(image) - 1
+    begin = True
+    center = image[len(image) // 2]
+    for i in range(len(center)):
+        if center[i] > 0 and begin:
+            start = i - 20
+            begin = False
+        if center[i] == 0 and not begin:
+            end = i + 20
+            break
+
+    return original[5:-5, start:end]
 
 ####Image attributes finding
 
@@ -195,6 +210,9 @@ def fillIn(im_th):
     return im_out
 
 #####Image preparation
+def clahe(image):
+    return claheObj.apply(image)
+
 def tresh(t, x):
     binary = (x < t) * 255.0
     binary = np.uint8(binary)
@@ -218,7 +236,10 @@ def checkPixels(image):
     else:
         return True
 def prepareImage(image):
-    im = color.rgb2grey(image)
+    #im = color.rgb2grey(image)
+    im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    #im = clahe(im)
     #im = cv2.blur(im, (5, 5))
     im = contrast(im, 1)
     #im = resizeimage.resize_cover(im, [len(im[0])*2, len(im)*2], validate=False)
@@ -244,11 +265,42 @@ def prepareImage(image):
 
     #print(im[len(im)//2])
     return im
+def preparePawel(image):
+
+    im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #im = color.rgb2grey(image)
+    im = clahe(im)
+    # im = cv2.blur(im, (5, 5))
+    im = contrast(im, 1)
+    cv2.imshow("I", im)
+    # im = resizeimage.resize_cover(im, [len(im[0])*2, len(im)*2], validate=False)
+    im = gamma(im, 3)
+    print(im)
+    im = tresh(0.5, im)
+    # t =0.5
+    # i = im
+    # while(checkPixels(i)):
+    #    i = tresh(t, im)
+    #    t += 0.1
+
+    # im = i
+    # im = cv2.fastNlMeansDenoising(im, 300)
+    # im = cv2.blur(im, (100, 100))
+    im = dilation(im)
+    im = erosion(im)
+    # print(im[len(im)//2])
+    # im = cv2.medianBlur(im, 3)
+    # im = imfill(im, 'holes');
+    # for i in im:
+    #    print(i)
+
+    # print(im[len(im)//2])
+    return im
 def prepareImageForColoring(image):
     im = color.rgb2grey(image)
     #im = contrast(im, 1.0)
     # im = gamma(im, 0.5)
-    t =0.2
+    t = 0.2
     i = im
     i = tresh(t, im)
     while(checkPixels(i)):
@@ -271,15 +323,18 @@ def prepareImageForColoring(image):
 
 ####main
 def readCard(imageName):
-    image = cv2.imread(imageName)
-
+    #image = cv2.imread(imageName)
+    image = imageName
     #im = color.rgb2grey(image)
+    #pawel = preparePawel(image)
     thresh = prepareImage(image)
+    #thresh = pawel
     forColoring = prepareImageForColoring(image)
     imageFilled = fillIn(thresh)
     cutImage = cutOut(imageFilled)
     number = pickNumber(imageFilled)
-    color = pickColor(image, forColoring)
+    #color = pickColor(image, forColoring)
+    color = pickColor(cutOutOriginal(imageFilled, image), prepareImageForColoring(cutOutOriginal(imageFilled, image)))
     filling = pickFilling(thresh, imageFilled)
     #thresh = thresh[5:-5, :-185]#diamond
     shape = pickShape(cutImage)
@@ -295,11 +350,11 @@ def readCard(imageName):
     # shape using only the contour
     # Calculate Hu Moments
     # show the output image
-    print((shape, color, filling, number))
+    #print((shape, color, filling, number))
     #cv2.imshow("Image", image)
-    cv2.imshow("Image", thresh)
-    cv2.imwrite("3ovals.jpg", imageFilled)
-    cv2.waitKey(0)
+    #cv2.imshow("Image", imageName)
+    #cv2.imwrite("3ovals.jpg", image)
+    #cv2.waitKey(0)
 
     return (shape, color , filling, number)
 
@@ -307,26 +362,26 @@ def readCard(imageName):
 #readCard("diamond.jpg")
 #color ok, number ok
 #assert readCard("k13.jpg") == ('oval', 'violet', 'striped', 3), "erorr"
-assert readCard("k14.jpg") == ('wave', 'violet', 'empty', 1), "erorr"
-assert readCard("k15.jpg") == ('oval', 'red', 'striped', 1), "erorr" #plaskie, diamond -> oval
+#assert readCard("k14.jpg") == ('wave', 'violet', 'empty', 1), "erorr"
+#assert readCard("k15.jpg") == ('oval', 'red', 'striped', 1), "erorr" #plaskie, diamond -> oval
 #assert readCard("k16.jpg") == ('diamond', 'green', 'empty', 1), "erorr" # dziwne rzeczy w rogu - daje striped :( # najnowszy zle
-assert readCard("k17.jpg") == ('oval', 'violet', 'full', 1), "erorr" #plaskie, diamond -> oval ok na nowych
-assert readCard("k18.jpg") == ('diamond', 'red', 'empty', 1), "erorr" #plaskie,  wave -> diamond
+#assert readCard("k17.jpg") == ('oval', 'violet', 'full', 1), "erorr" #plaskie, diamond -> oval ok na nowych
+#assert readCard("k18.jpg") == ('diamond', 'red', 'empty', 1), "erorr" #plaskie,  wave -> diamond
 #assert readCard("k19.jpg") == ('diamond', 'green', 'full', 3), "erorr" #trudne oval -> diamond nie daje rady nowy
-assert readCard("k20.jpg") == ('wave', 'red', 'empty', 2), "erorr" #ok
-assert readCard("k21.jpg") == ('wave', 'green', 'striped', 2), "erorr" #
-assert readCard("k22.jpg") == ('wave', 'violet', 'empty', 3), "erorr"#ok #
-assert readCard("k23.jpg") == ('diamond', 'red', 'empty', 3), "erorr" #ok
-assert readCard("k24.jpg") == ('wave', 'red', 'striped', 1), "erorr"#
+#assert readCard("k20.jpg") == ('wave', 'red', 'empty', 2), "erorr" #ok
+#assert readCard("k21.jpg") == ('wave', 'green', 'striped', 2), "erorr" #
+#assert readCard("k22.jpg") == ('wave', 'violet', 'empty', 3), "erorr"#ok #
+#assert readCard("k23.jpg") == ('diamond', 'red', 'empty', 3), "erorr" #ok
+#assert readCard("k24.jpg") == ('wave', 'red', 'striped', 1), "erorr"#
 
-c = ["k1.png","k2.png","k3.png","k4.png","k5.png","k6.png","k7.png","k8.png","k9.png","k10.png","k11.png","k12.png",]
-assert readCard(c[10]) == ('oval', 'green', 'empty', 2), "erorr" #ok
-assert readCard(c[0]) == ('wave', 'violet', 'full', 1), "erorr" #ok
-assert readCard(c[1]) == ('wave', 'green', 'striped', 3), "erorr" #ok
-assert readCard(c[2]) == ('diamond', 'violet', 'empty', 2), "erorr" #ok
-assert readCard(c[3]) == ('oval', 'red', 'full', 1), "erorr" #ok
-assert readCard(c[4]) == ('wave', 'red', 'striped', 2), "erorr" #ok
-assert readCard(c[5]) == ('diamond', 'red', 'full', 1), "erorr" #ok
+#c = ["k1.png","k2.png","k3.png","k4.png","k5.png","k6.png","k7.png","k8.png","k9.png","k10.png","k11.png","k12.png",]
+#assert readCard(c[10]) == ('oval', 'green', 'empty', 2), "erorr" #ok
+#assert readCard(c[0]) == ('wave', 'violet', 'full', 1), "erorr" #ok
+#assert readCard(c[1]) == ('wave', 'green', 'striped', 3), "erorr" #ok
+#assert readCard(c[2]) == ('diamond', 'violet', 'empty', 2), "erorr" #ok
+#assert readCard(c[3]) == ('oval', 'red', 'full', 1), "erorr" #ok
+#assert readCard(c[4]) == ('wave', 'red', 'striped', 2), "erorr" #ok
+#assert readCard(c[5]) == ('diamond', 'red', 'full', 1), "erorr" #ok
 
 
 #for i in c:

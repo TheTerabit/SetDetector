@@ -13,7 +13,7 @@ class ShapeDetector:
         approx = cv2.approxPolyDP(c, 0.005 * peri, True)
         # if the shape is a triangle, it will have 3 vertices
         print(len(approx))
-        if len(approx) < 10:
+        if len(approx) < 11:
             shape = "diamond"
 
         # if the shape has 4 vertices, it is either a square or
@@ -39,8 +39,8 @@ import cv2
 # the shapes can be approximated better
 def getShape(image):
     #image = cv2.imread(image)
-    resized = imutils.resize(image, width=300)
-    ratio = image.shape[0] / float(resized.shape[0])
+    #resized = imutils.resize(image, width=300)
+    #ratio = image.shape[0] / float(resized.shape[0])
     image = image[1:-1 , 1:-1]
     # convert the resized image to grayscale, blur it slightly,
     # and threshold it
@@ -59,8 +59,8 @@ def getShape(image):
         # compute the center of the contour, then detect the name of the
         # shape using only the contour
         M = cv2.moments(c)
-        cX = int((M["m10"] / M["m00"]) * ratio)
-        cY = int((M["m01"] / M["m00"]) * ratio)
+        #cX = int((M["m10"] / M["m00"]) * ratio)
+        #cY = int((M["m01"] / M["m00"]) * ratio)
         shape = sd.detect(c)
         return shape
         print("new:" + shape)
