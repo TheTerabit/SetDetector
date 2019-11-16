@@ -67,45 +67,48 @@ def pickNumber(image):
     #return n
 
 def pickColor(image, thresh):
-    color = []
-    for i in range(len(thresh)):
-        for j in range(len(thresh[i])):
-            if thresh[i][j] > 0:
-                color.append(image[i][j])
-                #print(image[i][j])
-    r = 0
-    g = 0
-    b = 0
-    rm = []
-    gm = []
-    bm = []
-    for i in color:
-        #r += i[0]
-        #g += i[1]
-        #b += i[2]
-        rm.append(i[2])
-        gm.append(i[1])
-        bm.append(i[0])
-    #print(rm)
-    rm.sort()
-    gm.sort()
-    bm.sort()
-    #print(rm)
-    rm = rm[len(rm) // 2]
-    gm = gm[len(gm) // 2]
-    bm = bm[len(bm) // 2]
-    #r /= len(color)
-    #g /= len(color)
-    #b /= len(color)
+    try:
+        color = []
+        for i in range(len(thresh)):
+            for j in range(len(thresh[i])):
+                if thresh[i][j] > 0:
+                    color.append(image[i][j])
+                    #print(image[i][j])
+        r = 0
+        g = 0
+        b = 0
+        rm = []
+        gm = []
+        bm = []
+        for i in color:
+            #r += i[0]
+            #g += i[1]
+            #b += i[2]
+            rm.append(i[2])
+            gm.append(i[1])
+            bm.append(i[0])
+        #print(rm)
+        rm.sort()
+        gm.sort()
+        bm.sort()
+        #print(rm)
+        rm = rm[len(rm) // 2]
+        gm = gm[len(gm) // 2]
+        bm = bm[len(bm) // 2]
+        #r /= len(color)
+        #g /= len(color)
+        #b /= len(color)
 
-    if bm > rm and bm > gm:
-        return 'violet'
-    elif rm > bm and rm > gm:
-        return 'red'
-    else:
-        return 'green'
+        if bm > rm and bm > gm:
+            return 'violet'
+        elif rm > bm and rm > gm:
+            return 'red'
+        else:
+            return 'green'
 
-    return (r, g, b, rm, gm, bm)
+        return (r, g, b, rm, gm, bm)
+    except:
+        return 'unknown'
     #return ('red', 'green', 'violet')
 
 def pickFilling(image, imageFilled):
@@ -231,7 +234,7 @@ def checkPixels(image):
     s=0
     for i in image:
         s += sum(i) // 255
-    if s > 100:
+    if s > 30:
         return False
     else:
         return True
@@ -303,7 +306,7 @@ def prepareImageForColoring(image):
     t = 0.2
     i = im
     i = tresh(t, im)
-    while(checkPixels(i)):
+    while (checkPixels(i) and t <= 1):
         i = tresh(t, im)
         t += 0.1
     #print (t - 0.1)
@@ -320,24 +323,68 @@ def prepareImageForColoring(image):
 
     #print(im[len(im)//2])
     return im
+def removeEdges(image):
+    im = image.copy()
+    flag = True
+    for i in range(len(image)):
+        flag = True
+        for j in range(len(image[i])):
+            if image[i][j] == 0:
+                flag = False
+            if image[i][j] > 0 and flag:
+                image[i][j] = 0
+        flag = True
+        for j in range(len(image[i])-1, -1, -1):
+            if image[i][j] == 0:
+                flag = False
+            if image[i][j] > 0 and flag:
+                image[i][j] = 0
 
+
+    return image
 ####main
 def readCard(imageName):
+    print("jestem")
     #image = cv2.imread(imageName)
     image = imageName
+    print("zaladowany")
     #im = color.rgb2grey(image)
     #pawel = preparePawel(image)
     thresh = prepareImage(image)
+    print("threshed")
+    thresh = thresh[:,5:-5]
+    thresh = removeEdges(thresh)
     #thresh = pawel
-    forColoring = prepareImageForColoring(image)
+    #forColoring = prepareImageForColoring(image)
+
     imageFilled = fillIn(thresh)
+    print("filled")
     cutImage = cutOut(imageFilled)
+    print("cut")
     number = pickNumber(imageFilled)
+    print("picked number")
     #color = pickColor(image, forColoring)
-    color = pickColor(cutOutOriginal(imageFilled, image), prepareImageForColoring(cutOutOriginal(imageFilled, image)))
+    cut = cutOutOriginal(imageFilled, image)
+    print("orignal cut")
+    originalForColoring = prepareImageForColoring(cut)
+    print("orignal prepared for coloring")
+    color = pickColor(cut, originalForColoring)
+    print("picked color")
     filling = pickFilling(thresh, imageFilled)
+    print("picked filling")
     #thresh = thresh[5:-5, :-185]#diamond
     shape = pickShape(cutImage)
+    if shape == None:
+        cv2.imshow("Image", imageFilled)
+        # cv2.imshow("Image", imageName)
+        # cv2.imwrite("3ovals.jpg", image)
+        cv2.waitKey(0)
+        cv2.imshow("Image", thresh)
+        # cv2.imshow("Image", imageName)
+        # cv2.imwrite("3ovals.jpg", image)
+        cv2.waitKey(0)
+        shape = 'unknown'
+    print("picked shape")
     #imageFilled = imageFilled[5:-5, 50:]#oval
     #thresh = thresh[5:-5, 50:-250]#wave
     #--
@@ -351,10 +398,21 @@ def readCard(imageName):
     # Calculate Hu Moments
     # show the output image
     #print((shape, color, filling, number))
-    #cv2.imshow("Image", image)
-    #cv2.imshow("Image", imageName)
-    #cv2.imwrite("3ovals.jpg", image)
-    #cv2.waitKey(0)
+    #try:
+    #    cv2.imshow("Image", cutImage)
+    #    #cv2.imshow("Image", imageName)
+    #    #cv2.imwrite("3ovals.jpg", image)
+    #    cv2.waitKey(0)
+    #except:
+    #    cv2.imshow("Image", imageFilled)
+    #    # cv2.imshow("Image", imageName)
+    #    # cv2.imwrite("3ovals.jpg", image)
+    #    cv2.waitKey(0)
+    #    cv2.imshow("Image", thresh)
+    #    # cv2.imshow("Image", imageName)
+    #    # cv2.imwrite("3ovals.jpg", image)
+    #    cv2.waitKey(0)
+
 
     return (shape, color , filling, number)
 

@@ -4,11 +4,11 @@ from matplotlib import pyplot as plt
 import os #read all files in directory
 from scipy import ndimage as ndi
 import tranformations as t
-import HuMoments as hu
 import time
+import HuMoments as hu
+import gc
 
-
-
+gc.collect()
 easy = []
 medium = []
 hard = []
@@ -22,6 +22,7 @@ def readImages():
     for path in paths:
         for r, d, f in os.walk(path):
             for file in f:
+                print(file)
                 if(path == paths[0]):
                     easy.append(cv.imread(os.path.join(r, file), 1))
                 elif(path == paths[1]):
@@ -53,7 +54,9 @@ def showCropped(cropped, original):
 
 #main function
 def transformImages(images):
+
     for i in range(len(images)):
+        print("Start of tranformations...")
         grayTemp = t.bgr2gray(images[i])
         contrastTemp = t.contrast(grayTemp, 48.5)
         gammaTemp = t.gamma(contrastTemp, 0.55)
@@ -106,9 +109,9 @@ def transformImages(images):
         for contour in contoursFinal:
             croppedContours.append([t.crop(contour)])
 
-        sets = []
+
         detectedContours = []
-        print("obrazek: " + str(i))
+
         #loop through all contours and create new image with them
         for points in croppedContours:
             pts1 = np.float32([[points[0][3]], [points[0][2]], [points[0][0]], [points[0][1]]])
@@ -117,19 +120,24 @@ def transformImages(images):
             croppedImage = cv.warpPerspective(images[i], M, (int(points[0][-1][0]), int(points[0][-1][1])))
 
             #uncomment this line if you want to see cropped and original image
-            #showCropped(croppedImage, images[i]# )
-            #TODO implement detection function
+            #showCropped(croppedImage, images[i])
+            print("Before hu.readCard")
             cardAttributes = hu.readCard(croppedImage)
-            sets.append(cardAttributes)
-            #TODO nalozyc cardAttributes na obrazek
+            print(cardAttributes)
+            detectedContours.append([cardAttributes[0] + " " + cardAttributes[1] + " " + cardAttributes[2] + " " + str(cardAttributes[3]), points[0][3]])
+
+            #TODO implement detection function
             #detectedContours.append(result from detection function)
-        #print(sets)
-        #cv.imshow("Image", images[i])
+
+        cv.drawContours(images[i], contoursFinal, -1, (0, 255, 0), 20)
+
+        #printing detected card symbols
+        for k in range(len(detectedContours)):
+            cv.putText(images[i], detectedContours[k][0], (detectedContours[k][1][0], detectedContours[k][1][1] - 10), cv.FONT_HERSHEY_SIMPLEX, 2.0, (255, 0, 0), 5)
+        #cv.imshow("image", images[i])
+        cv.imwrite("out"+str(i)+".jpg",images[i])
         #cv.waitKey(0)
-
-        #cv.drawContours(images[i], temp, -1, (0, 255, 0), 20)
-
-
+        print("Tranforming photo ended...", i)
         del grayTemp
         del gammaTemp
         del contrastTemp
@@ -143,13 +151,14 @@ def transformImages(images):
 
 readImages()
 
-transformImages(easy)
-transformImages(medium)
+#transformImages(easy)
+#transformImages(medium)
 transformImages(hard)
 
-showImages(easy, 12, 4, 3)
-showImages(medium, 15, 5, 3)
-showImages(hard, 16, 4, 4)
+print("Showing images...")
+showImages(easy, 4, 2, 2)
+#showImages(medium, 15, 5, 3)
+#showImages(hard, 16, 4, 4)
 
 
 del easy
