@@ -18,9 +18,10 @@ def cutOut(image):
             start = i - 20
             begin = False
         if center[i] == 0 and not begin:
-            end = i + 20
+            end = i + 25
             break
-
+    if start < 0:
+        start = 0
     return image[5:-5, start:end]
 def cutOutOriginal(image, original):
     start = 0
@@ -32,9 +33,10 @@ def cutOutOriginal(image, original):
             start = i - 20
             begin = False
         if center[i] == 0 and not begin:
-            end = i + 20
+            end = i + 25
             break
-
+    if start < 0:
+        start = 0
     return original[5:-5, start:end]
 
 ####Image attributes finding
@@ -98,10 +100,11 @@ def pickColor(image, thresh):
         #r /= len(color)
         #g /= len(color)
         #b /= len(color)
-
-        if bm > rm and bm > gm:
+        print("color:")
+        print(rm, gm, bm)
+        if bm > rm and bm > gm + 20:
             return 'violet'
-        elif rm > bm and rm > gm:
+        elif rm > bm and rm > gm + 20:
             return 'red'
         else:
             return 'green'
@@ -124,7 +127,7 @@ def pickFilling(image, imageFilled):
 
     filled = before / after
     print(filled)
-    if filled > 0.9:
+    if filled > 0.93:
         return 'full'
     elif filled > 0.3:
         return 'striped'
@@ -360,6 +363,7 @@ def readCard(imageName):
     imageFilled = fillIn(thresh)
     print("filled")
     cutImage = cutOut(imageFilled)
+    cutImage = removeEdges(cutImage)
     print("cut")
     number = pickNumber(imageFilled)
     print("picked number")
@@ -374,16 +378,18 @@ def readCard(imageName):
     print("picked filling")
     #thresh = thresh[5:-5, :-185]#diamond
     shape = pickShape(cutImage)
-    if shape == None:
-        cv2.imshow("Image", imageFilled)
-        # cv2.imshow("Image", imageName)
-        # cv2.imwrite("3ovals.jpg", image)
-        cv2.waitKey(0)
-        cv2.imshow("Image", thresh)
-        # cv2.imshow("Image", imageName)
-        # cv2.imwrite("3ovals.jpg", image)
-        cv2.waitKey(0)
-        shape = 'unknown'
+    #if shape == None:
+    #    cv2.imshow("Image", imageFilled)
+    #    # cv2.imshow("Image", imageName)
+    #    # cv2.imwrite("3ovals.jpg", image)
+    #    cv2.waitKey(0)
+    #    cv2.imshow("Image", thresh)
+    #    # cv2.imshow("Image", imageName)
+    #    # cv2.imwrite("3ovals.jpg", image)
+    #    cv2.waitKey(0)
+    #    shape = 'unknown'
+    #cv2.imshow("Image", cutImage)
+    #cv2.waitKey(0)
     print("picked shape")
     #imageFilled = imageFilled[5:-5, 50:]#oval
     #thresh = thresh[5:-5, 50:-250]#wave

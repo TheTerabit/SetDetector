@@ -152,8 +152,8 @@ def transformImages(images):
 readImages()
 
 #transformImages(easy)
-#transformImages(medium)
-transformImages(hard)
+transformImages(medium)
+#transformImages(hard)
 
 print("Showing images...")
 showImages(easy, 4, 2, 2)

@@ -18,7 +18,7 @@ class ShapeDetector:
 
         # if the shape has 4 vertices, it is either a square or
         # a rectangle
-        elif len(approx) < 18:
+        elif len(approx) < 17:
            shape = "oval"
 
         else:
