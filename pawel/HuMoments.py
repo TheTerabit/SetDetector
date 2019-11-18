@@ -350,27 +350,33 @@ def readCard(imageName):
     print("jestem")
     #image = cv2.imread(imageName)
     image = imageName
+    cv2.imwrite("loaded.jpg", image)
     print("zaladowany")
     #im = color.rgb2grey(image)
     #pawel = preparePawel(image)
     thresh = prepareImage(image)
+    cv2.imwrite("threshed.jpg", thresh)
     print("threshed")
     thresh = thresh[:,5:-5]
     thresh = removeEdges(thresh)
     #thresh = pawel
     #forColoring = prepareImageForColoring(image)
-
+    cv2.imwrite("removeEdges.jpg", thresh)
     imageFilled = fillIn(thresh)
+    cv2.imwrite("filled.jpg", imageFilled)
     print("filled")
     cutImage = cutOut(imageFilled)
     cutImage = removeEdges(cutImage)
+    cv2.imwrite("cutImage.jpg", cutImage)
     print("cut")
     number = pickNumber(imageFilled)
     print("picked number")
     #color = pickColor(image, forColoring)
     cut = cutOutOriginal(imageFilled, image)
+    cv2.imwrite("cutOriginal.jpg", cut)
     print("orignal cut")
     originalForColoring = prepareImageForColoring(cut)
+    cv2.imwrite("originalForColoring.jpg", originalForColoring)
     print("orignal prepared for coloring")
     color = pickColor(cut, originalForColoring)
     print("picked color")
@@ -388,8 +394,8 @@ def readCard(imageName):
     #    # cv2.imwrite("3ovals.jpg", image)
     #    cv2.waitKey(0)
     #    shape = 'unknown'
-    #cv2.imshow("Image", cutImage)
-    #cv2.waitKey(0)
+    cv2.imshow("Image", cutImage)
+    cv2.waitKey(0)
     print("picked shape")
     #imageFilled = imageFilled[5:-5, 50:]#oval
     #thresh = thresh[5:-5, 50:-250]#wave
